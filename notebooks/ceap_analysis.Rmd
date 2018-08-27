@@ -1,0 +1,79 @@
+---
+title: "CEAP Analysis"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(here)
+```
+
+```{r}
+data <- read_csv(here::here("data/dadosCEAP.csv"),
+                 progress = F,
+                 col_types = cols(
+                   nomeParlamentar = col_character(),
+                   idCadastro = col_integer(),
+                   sgUF = col_character(),
+                   sgPartido = col_character(),
+                   tipoDespesa = col_character(),
+                   especDespesa = col_character(),
+                   fornecedor = col_character(),
+                   CNPJCPF = col_character(),
+                   tipoDocumento = col_integer(),
+                   dataEmissao = col_datetime(format = ""),
+                   valorDocumento = col_double(),
+                   valorGlosa = col_integer(),
+                   valorLíquido = col_double()))
+
+data %>%
+  glimpse()
+```
+
+# Which parliamentarians spent the most from the CEAP budget? Which spent less? 
+
+```{r}
+data %>%
+  group_by(idCadastro,
+           nomeParlamentar) %>%
+  summarise(total_expense = sum(valorLíquido)) %>%
+  ungroup() %>%
+  top_n(n=20, wt=total_expense) %>%
+  ggplot(aes(reorder(nomeParlamentar,
+                     total_expense),
+             total_expense)) +
+  geom_point() + 
+  geom_segment(aes(x = 0, y = total_expense, 
+                 xend = nomeParlamentar, 
+                 yend = total_expense),
+               color = "grey50",
+               size=0.4) +
+  geom_point() +
+  coord_flip() +
+  labs(y="Total Expense (R$)", x="Parliamentarian name")
+```
+
+```{r}
+data %>%
+  group_by(idCadastro,
+           nomeParlamentar) %>%
+  summarise(total_expense = sum(valorLíquido)) %>%
+  ungroup() %>%
+  filter(total_expense >= 0) %>%
+  arrange(total_expense) %>%
+  slice(1:20) %>%
+  ggplot(aes(reorder(nomeParlamentar,
+                     total_expense),
+             total_expense)) +
+  geom_point() +
+  geom_segment(aes(x = 0, y = total_expense,
+                   xend = nomeParlamentar,
+                   yend = total_expense),
+               color = "grey50",
+               size=0.5) +
+  geom_point() +
+  coord_flip() +
+  labs(y="Total Expense (R$)", 
+       x="Parliamentarian name")
+```
+

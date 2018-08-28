@@ -39,18 +39,24 @@ data %>%
   summarise(total_expense = sum(valorLíquido)) %>%
   ungroup() %>%
   top_n(n=20, wt=total_expense) %>%
-  ggplot(aes(reorder(nomeParlamentar,
-                     total_expense),
-             total_expense)) +
-  geom_point() + 
-  geom_segment(aes(x = 0, y = total_expense, 
-                 xend = nomeParlamentar, 
-                 yend = total_expense),
+  ggplot(aes(total_expense, 
+             reorder(nomeParlamentar,
+                     total_expense))) +
+  geom_segment(aes(x = min(total_expense),
+                   y =reorder(nomeParlamentar
+                              ,total_expense),
+                   xend = total_expense,
+                   yend = nomeParlamentar),
                color = "grey50",
-               size=0.4) +
+               size=0.35) +
   geom_point() +
-  coord_flip() +
-  labs(y="Total Expense (R$)", x="Parliamentarian name")
+  scale_x_continuous(breaks = seq(from = 0,
+                                  to=10000000,
+                                  by = 10000)) +
+  theme(axis.text.x = element_text(angle = 30,
+                                   hjust = 1)) +
+  labs(x="Total Expense (R$)", 
+       y="Parliamentarian name")
 ```
 
 ```{r}
@@ -62,18 +68,29 @@ data %>%
   filter(total_expense >= 0) %>%
   arrange(total_expense) %>%
   slice(1:20) %>%
-  ggplot(aes(reorder(nomeParlamentar,
-                     total_expense),
-             total_expense)) +
-  geom_point() +
-  geom_segment(aes(x = 0, y = total_expense,
-                   xend = nomeParlamentar,
-                   yend = total_expense),
+  ggplot(aes(total_expense, 
+             reorder(nomeParlamentar,total_expense))) +
+  geom_segment(aes(x = 0, y =reorder(nomeParlamentar,total_expense),
+                   xend = total_expense,
+                   yend = nomeParlamentar),
                color = "grey50",
-               size=0.5) +
+               size=0.35) +
   geom_point() +
-  coord_flip() +
-  labs(y="Total Expense (R$)", 
-       x="Parliamentarian name")
+  scale_x_continuous(breaks = seq(from = 0,
+                                  to=10000000,
+                                  by = 75)) +
+  labs(x="Total Expense (R$)", 
+       y="Parliamentarian name")
+```
+
+```{r}
+data %>%
+  na.omit(sgUF) %>%
+  group_by(sgUF) %>%
+  summarise(state_expense = sum(valorLíquido)) %>%
+  ggplot(aes(reorder(sgUF,state_expense),
+             state_expense)) +
+  geom_bar(stat = "identity") +
+  labs(x="States", y="Total Expense")
 ```
 

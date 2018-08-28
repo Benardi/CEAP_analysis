@@ -21,10 +21,25 @@ data <- read_csv(here::here("data/dadosCEAP.csv"),
                    fornecedor = col_character(),
                    CNPJCPF = col_character(),
                    tipoDocumento = col_integer(),
-                   dataEmissao = col_datetime(format = ""),
+                   dataEmissao = col_character(),
                    valorDocumento = col_double(),
                    valorGlosa = col_integer(),
-                   valorLíquido = col_double()))
+                   valorLíquido = col_double())) %>%
+  mutate(dataEmissao = lubridate::parse_date_time(dataEmissao,
+                                                  "%Y-%m-%d %H:%M:%S"),
+         year_month = paste(lubridate::year(dataEmissao),
+                            lubridate::month(dataEmissao),
+                            sep = "-"))
+
+state_info <- read_csv(here::here("/data/limiteMensalCEAP.csv"),
+                 progress = F,
+                 col_types = cols(
+                   UF = col_character(),
+                   limite_mensal = col_double()))
+
+data %>% 
+  full_join(state_info,
+            by = c("sgUF" = "UF")) -> data
 
 data %>%
   glimpse()
@@ -33,24 +48,25 @@ data %>%
 # Which parliamentarians spent the most from the CEAP budget? Which spent less? 
 
 ```{r}
+options(digits = 2)
 data %>%
   group_by(idCadastro,
            nomeParlamentar) %>%
-  summarise(total_expense = sum(valorLíquido)) %>%
+  summarize(total_expense = sum(valorLíquido)) %>%
   ungroup() %>%
-  top_n(n=20, wt=total_expense) %>%
+  top_n(n=10, wt=total_expense) %>%
   ggplot(aes(total_expense, 
              reorder(nomeParlamentar,
                      total_expense))) +
   geom_segment(aes(x = min(total_expense),
-                   y =reorder(nomeParlamentar
-                              ,total_expense),
+                   y =reorder(nomeParlamentar,
+                              total_expense),
                    xend = total_expense,
                    yend = nomeParlamentar),
                color = "grey50",
                size=0.35) +
   geom_point() +
-  scale_x_continuous(breaks = seq(from = 0,
+  scale_x_continuous(breaks = seq(from = 135000,
                                   to=10000000,
                                   by = 10000)) +
   theme(axis.text.x = element_text(angle = 30,
@@ -63,34 +79,65 @@ data %>%
 data %>%
   group_by(idCadastro,
            nomeParlamentar) %>%
-  summarise(total_expense = sum(valorLíquido)) %>%
+  summarize(total_expense = sum(valorLíquido)) %>%
   ungroup() %>%
   filter(total_expense >= 0) %>%
   arrange(total_expense) %>%
-  slice(1:20) %>%
+  slice(1:10) %>%
   ggplot(aes(total_expense, 
              reorder(nomeParlamentar,total_expense))) +
-  geom_segment(aes(x = 0, y =reorder(nomeParlamentar,total_expense),
+  geom_segment(aes(x = 0, y =reorder(nomeParlamentar,-total_expense),
                    xend = total_expense,
                    yend = nomeParlamentar),
                color = "grey50",
                size=0.35) +
   geom_point() +
   scale_x_continuous(breaks = seq(from = 0,
-                                  to=10000000,
-                                  by = 75)) +
+                                  to=100000,
+                                  by = 20)) +
   labs(x="Total Expense (R$)", 
        y="Parliamentarian name")
 ```
 
 ```{r}
 data %>%
-  na.omit(sgUF) %>%
+  filter(tipoDocumento == 2) %>%
   group_by(sgUF) %>%
-  summarise(state_expense = sum(valorLíquido)) %>%
-  ggplot(aes(reorder(sgUF,state_expense),
-             state_expense)) +
+  summarise(international_expense = sum(valorLíquido)) %>%
+  arrange(international_expense)
+```
+
+# In which states the parliamentarians spent the most abroad? In which states they spent less? 
+
+```{r}
+data %>%
+  filter(tipoDocumento == 2) %>%
+  group_by(sgUF) %>%
+  summarize(international_expense = sum(valorLíquido)) %>%
+  ggplot(aes(reorder(sgUF,international_expense),
+             international_expense)) +
   geom_bar(stat = "identity") +
-  labs(x="States", y="Total Expense")
+  labs(x="States", y="International expense")
+```
+
+# Which parties contain the parliamentarians that use CEAP the most in the state of Paraíba? Which contain the ones which spend the less?
+
+```{r}
+data %>%
+  filter(sgUF == "PB") %>%
+  na.omit(sgUF,
+          sgPartido,
+          valorLíquido) %>%
+  group_by(sgPartido) %>%
+  summarize(total_expense = sum(valorLíquido)) %>%
+  ggplot(aes(reorder(sgPartido,total_expense),
+             total_expense)) +
+  geom_bar(stat = "identity") +
+  labs(x="Parties", y="Total expense")
+```
+
+```{r}
+data %>%
+  group_by(year_month)
 ```
 

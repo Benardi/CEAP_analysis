@@ -1,6 +1,10 @@
 ---
 title: "CEAP Analysis"
-output: html_notebook
+author: "José Benardi de Souza Nunes"
+output:
+  html_notebook:
+    toc: yes
+    toc_float: yes
 ---
 
 ```{r}
@@ -29,7 +33,8 @@ data <- read_csv(here::here("data/dadosCEAP.csv"),
                                                   "%Y-%m-%d %H:%M:%S"),
          year_month = paste(lubridate::year(dataEmissao),
                             lubridate::month(dataEmissao),
-                            sep = "-"))
+                            sep = "-"),
+         tipoDespesa = toupper(tipoDespesa))
 
 state_info <- read_csv(here::here("/data/limiteMensalCEAP.csv"),
                  progress = F,
@@ -121,7 +126,20 @@ data %>%
   labs(x="States", y="International expense")
 ```
 
-# Which parties contain the parliamentarians that use CEAP the most in the state of Paraíba? Which contain the ones which spend the less?
+# Which parties contain the parliamentarians that used CEAP more frequently in the state of Paraíba? Which contain the ones which used less frequently? And in terms of R$?
+
+```{r}
+data %>%
+  filter(sgUF == "PB") %>%
+  na.omit(sgUF,
+          sgPartido) %>%
+  group_by(sgPartido) %>%
+  summarize(frequency =n()) %>%
+  ggplot(aes(reorder(sgPartido,frequency),
+             frequency)) +
+  geom_bar(stat = "identity") +
+  labs(x="Parties", y="Absolute frequency")
+```
 
 ```{r}
 data %>%
@@ -185,4 +203,94 @@ data %>%
              international_expense)) +
   geom_bar(stat = "identity") +
   labs(x="States", y="Flight expense")
+```
+
+# What type of expense is more frequently used with CEAP by parliamentarians of these parties? What type of expense is more costly?
+
+## PSDB
+
+```{r}
+data %>%
+  filter(sgPartido %in% c("PSDB")) %>%
+  group_by(tipoDespesa) %>%
+  summarize(frequency = n()) %>%
+  ggplot(aes(reorder(tipoDespesa,frequency),
+             frequency)) +
+  geom_bar(stat="identity",
+           fill="#1E347F") + 
+  coord_flip()
+```
+
+```{r}
+data %>%
+  filter(sgPartido %in% c("PSDB")) %>%
+  group_by(tipoDespesa) %>%
+  summarize(expense = sum(valorLíquido)) %>%
+  ggplot(aes(reorder(tipoDespesa,expense),
+             expense)) +
+  geom_bar(stat="identity",
+           fill="#1E347F") +
+  labs(y= "Total expense", 
+       x="Type of expense") +
+  coord_flip() 
+```
+
+## PMDB
+
+```{r}
+data %>%
+  filter(sgPartido %in% c("PMDB")) %>%
+  group_by(tipoDespesa) %>%
+  summarize(frequency = n()) %>%
+  ggplot(aes(reorder(tipoDespesa,frequency),
+             frequency)) +
+  geom_bar(stat="identity",
+           fill="#7F6607") + 
+  labs(y= "Absolute Frequency", 
+       x="Type of expense") +
+  coord_flip()
+```
+
+```{r}
+data %>%
+  filter(sgPartido %in% c("PMDB")) %>%
+  group_by(tipoDespesa) %>%
+  summarize(expense = sum(valorLíquido)) %>%
+  ggplot(aes(reorder(tipoDespesa,expense),
+             expense)) +
+  geom_bar(stat="identity",
+           fill="#7F6607") +
+  labs(y= "Total expense", 
+       x="Type of expense") +
+  coord_flip() 
+```
+
+## PT
+
+```{r}
+data %>%
+  filter(sgPartido %in% c("PT")) %>%
+  group_by(tipoDespesa) %>%
+  summarize(frequency = n()) %>%
+  ggplot(aes(reorder(tipoDespesa,frequency),
+             frequency)) +
+  geom_bar(stat="identity",
+           fill="#7F1707") + 
+  labs(y= "Absolute Frequency", 
+       x="Type of expense") +
+  coord_flip()
+```
+
+```{r}
+data %>%
+  filter(sgPartido %in% c("PT")) %>%
+  group_by(tipoDespesa) %>%
+  summarize(expense = sum(valorLíquido)) %>%
+  ggplot(aes(reorder(tipoDespesa,expense),
+             expense)) +
+  geom_bar(stat="identity",
+           fill="#7F1707") +
+  labs(y= "Total expense", 
+       x="Type of expense") +
+  coord_flip() 
 ```

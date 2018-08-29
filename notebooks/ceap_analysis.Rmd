@@ -173,3 +173,16 @@ data %>%
 
 ```
 
+# In which states the parliamentarians spent the most abroad? In which states they spent less? 
+
+```{r}
+data %>%
+  filter(tipoDespesa == "PASSAGENS AÉREAS") %>%
+  group_by(sgUF) %>%
+  summarize(international_expense = sum(valorLíquido)) %>%
+  filter(sgUF != "NA") %>%
+  ggplot(aes(reorder(sgUF,international_expense),
+             international_expense)) +
+  geom_bar(stat = "identity") +
+  labs(x="States", y="Flight expense")
+```

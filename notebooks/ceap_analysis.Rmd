@@ -7,6 +7,11 @@ output:
     toc_float: yes
 ---
 
+# Introduction 
+
+> This exploratory data analysis was made based with data provided by the Brazilian government  about the expenses allowed to its parliamentarians (CEAP). More information about (in Portuguese) can be found in its [official site](http://www2.camara.leg.br/transparencia/acesso-a-informacao/copy_of_perguntas-frequentes/cota-para-o-exercicio-da-atividade-parlamentar)
+
+
 ```{r}
 library(tidyverse)
 library(here)
@@ -50,7 +55,17 @@ data %>%
   glimpse()
 ```
 
-# Which parliamentarians spent the most from the CEAP budget? Which spent less? 
+<br>
+
+***
+
+<br>
+
+# Overall spending of the CEAP budget
+
+<br>
+
+## Which parliamentarians spent the most?
 
 ```{r}
 data %>%
@@ -79,6 +94,8 @@ data %>%
   labs(x="Total Expense (R$)", 
        y="Parliamentarian name")
 ```
+
+## Which parliamentarians spent less? 
 
 ```{r}
 data %>%
@@ -113,7 +130,19 @@ data %>%
   arrange(international_expense)
 ```
 
-# In which states the parliamentarians spent the most abroad? In which states they spent less? 
+<br>
+
+***
+
+<br>
+
+# Looking at spending by state
+
+<br>
+
+## Parliamentarians from which states spent the most abroad? And the less?  
+
+<br>
 
 ```{r}
 data %>%
@@ -126,36 +155,7 @@ data %>%
   labs(x="States", y="International expense")
 ```
 
-# Which parties contain the parliamentarians that used CEAP more frequently in the state of Paraíba? Which contain the ones which used less frequently? And in terms of R$?
-
-```{r}
-data %>%
-  filter(sgUF == "PB") %>%
-  na.omit(sgUF,
-          sgPartido) %>%
-  group_by(sgPartido) %>%
-  summarize(frequency =n()) %>%
-  ggplot(aes(reorder(sgPartido,frequency),
-             frequency)) +
-  geom_bar(stat = "identity") +
-  labs(x="Parties", y="Absolute frequency")
-```
-
-```{r}
-data %>%
-  filter(sgUF == "PB") %>%
-  na.omit(sgUF,
-          sgPartido,
-          valorLíquido) %>%
-  group_by(sgPartido) %>%
-  summarize(total_expense = sum(valorLíquido)) %>%
-  ggplot(aes(reorder(sgPartido,total_expense),
-             total_expense)) +
-  geom_bar(stat = "identity") +
-  labs(x="Parties", y="Total expense")
-```
-
-# Which parliamentars violate the CEAP budget set by their state the most?
+## Which parliamentarians violated the CEAP budget set by their state the most?
 
 ```{r}
 data %>%
@@ -191,7 +191,7 @@ data %>%
 
 ```
 
-# In which states the parliamentarians spent the most abroad? In which states they spent less? 
+## At which states the parliamentarians spent the most with airfare ? And the less? 
 
 ```{r}
 data %>%
@@ -205,9 +205,60 @@ data %>%
   labs(x="States", y="Flight expense")
 ```
 
-# What type of expense is more frequently used with CEAP by parliamentarians of these parties? What type of expense is more costly?
 
-## PSDB
+<br>
+
+***
+
+<br>
+
+# Taking a closer look at Paraíba 
+
+<br>
+
+## In which parties the parliamentarians used CEAP more frequently? In which they used it less frequently?
+
+```{r}
+data %>%
+  filter(sgUF == "PB") %>%
+  na.omit(sgUF,
+          sgPartido) %>%
+  group_by(sgPartido) %>%
+  summarize(frequency =n()) %>%
+  ggplot(aes(reorder(sgPartido,frequency),
+             frequency)) +
+  geom_bar(stat = "identity") +
+  labs(x="Parties", y="Absolute frequency")
+```
+
+## In which parties the parliamentarians spent the most from CEAP? In which they spent the less?
+
+```{r}
+data %>%
+  filter(sgUF == "PB") %>%
+  na.omit(sgUF,
+          sgPartido,
+          valorLíquido) %>%
+  group_by(sgPartido) %>%
+  summarize(total_expense = sum(valorLíquido)) %>%
+  ggplot(aes(reorder(sgPartido,total_expense),
+             total_expense)) +
+  geom_bar(stat = "identity") +
+  labs(x="Parties", y="Total expense")
+```
+
+<br>
+
+***
+
+<br>
+
+
+# Looking at expense by political party
+
+## What type of expense is more frequently paid with CEAP by parliamentarians of these parties? 
+
+### PSDB
 
 ```{r}
 data %>%
@@ -221,21 +272,7 @@ data %>%
   coord_flip()
 ```
 
-```{r}
-data %>%
-  filter(sgPartido %in% c("PSDB")) %>%
-  group_by(tipoDespesa) %>%
-  summarize(expense = sum(valorLíquido)) %>%
-  ggplot(aes(reorder(tipoDespesa,expense),
-             expense)) +
-  geom_bar(stat="identity",
-           fill="#1E347F") +
-  labs(y= "Total expense", 
-       x="Type of expense") +
-  coord_flip() 
-```
-
-## PMDB
+### PMDB
 
 ```{r}
 data %>%
@@ -251,21 +288,7 @@ data %>%
   coord_flip()
 ```
 
-```{r}
-data %>%
-  filter(sgPartido %in% c("PMDB")) %>%
-  group_by(tipoDespesa) %>%
-  summarize(expense = sum(valorLíquido)) %>%
-  ggplot(aes(reorder(tipoDespesa,expense),
-             expense)) +
-  geom_bar(stat="identity",
-           fill="#7F6607") +
-  labs(y= "Total expense", 
-       x="Type of expense") +
-  coord_flip() 
-```
-
-## PT
+### PT
 
 ```{r}
 data %>%
@@ -280,6 +303,45 @@ data %>%
        x="Type of expense") +
   coord_flip()
 ```
+
+
+
+## What type of expense paid with CEAP by parliamentarians of these parties costs more?
+
+### PSDB
+
+```{r}
+data %>%
+  filter(sgPartido %in% c("PSDB")) %>%
+  group_by(tipoDespesa) %>%
+  summarize(expense = sum(valorLíquido)) %>%
+  ggplot(aes(reorder(tipoDespesa,expense),
+             expense)) +
+  geom_bar(stat="identity",
+           fill="#1E347F") +
+  labs(y= "Total expense", 
+       x="Type of expense") +
+  coord_flip() 
+```
+
+### PMDB
+
+```{r}
+data %>%
+  filter(sgPartido %in% c("PMDB")) %>%
+  group_by(tipoDespesa) %>%
+  summarize(expense = sum(valorLíquido)) %>%
+  ggplot(aes(reorder(tipoDespesa,expense),
+             expense)) +
+  geom_bar(stat="identity",
+           fill="#7F6607") +
+  labs(y= "Total expense", 
+       x="Type of expense") +
+  coord_flip() 
+```
+
+### PT
+
 
 ```{r}
 data %>%

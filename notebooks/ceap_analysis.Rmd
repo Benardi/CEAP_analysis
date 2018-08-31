@@ -1,16 +1,23 @@
 ---
-title: "CEAP Analysis"
+title: "C.E.A.P Analysis"
+subtitle: "Exploratory data analysis on 'Quota for the exercise of parliamentary activity' provided by the Brazilian government"
 author: "José Benardi de Souza Nunes"
+date: 30/08/2018
 output:
   html_notebook:
     toc: yes
     toc_float: yes
 ---
 
+<br>
+
 # Introduction 
 
-> This exploratory data analysis was made based with data provided by the Brazilian government  about the expenses allowed to its parliamentarians (CEAP). More information about (in Portuguese) can be found in its [official site](http://www2.camara.leg.br/transparencia/acesso-a-informacao/copy_of_perguntas-frequentes/cota-para-o-exercicio-da-atividade-parlamentar)
+<br>
 
+> This exploratory data analysis was made based on data provided by the Brazilian government  about the expenses allowed to its parliamentarians or C.E.A.P. (Cota para o Exercício da Atividade Parlamentar / Quota for the Exercise of Parliamentary Activity). More information about it (in Portuguese) can be found in its [official site](http://www2.camara.leg.br/transparencia/acesso-a-informacao/copy_of_perguntas-frequentes/cota-para-o-exercicio-da-atividade-parlamentar)
+
+<br>
 
 ```{r}
 library(tidyverse)
@@ -91,11 +98,33 @@ data %>%
                                   by = 1E4)) +
   theme(axis.text.x = element_text(angle = 30,
                                    hjust = 1)) +
+  guides(color=guide_legend("State")) +
   labs(x="Total Expense (R$)", 
        y="Parliamentarian name")
 ```
 
+* The parliamentarian _Edio Lopes_ from the state of Roraima is the biggest spender with a total expense of $R\$\:1,\!485,\!000.\,00$ (that's almost **1.5 million reais**).
+    + _Edio Lopes_ spent what the second place _Hiran Gonçalves_ (also from Roraima) spent plus some $R\$\:55,\!000.\,00$.
+    + _Edio Lopes_ spent what the tenth place _Silas Câmara_ from the state of Amazonas spent plus some $R\$\: 80,\!000.\,00$.
+* Half of the big spenders are from the state of Roraima (top three included).
+
+<br>
+
 ## Which parliamentarians spent less? 
+
+```{r}
+data %>%
+  group_by(sgUF,
+           idCadastro,
+           nomeParlamentar) %>%
+  summarize(total_expense = sum(valorLíquido)) %>%
+  ungroup() %>%
+  filter(total_expense >= 0) %>%
+  arrange(total_expense) %>%
+  slice(1:10)
+```
+
+* Let's keep the exact values here for the sake of reference.
 
 ```{r}
 data %>%
@@ -122,13 +151,28 @@ data %>%
        y="Parliamentarian name")
 ```
 
+* The parliamentarian _Camilo Cola_ spent the rather astonishing small sum of $R\$\:0.\,62$
+* Going against what one would expect none of the more frugal parliamentarians are from the Federal District (DF). A parliamentarian who lived there wouldn't have to travel to the DF and would probably already have a house there.
+    +  How did our frugal friends pay for the aforementioned expenses? Did it come from their own pockets?   
+
 ```{r}
 data %>%
-  filter(tipoDocumento == 2) %>%
-  group_by(sgUF) %>%
-  summarise(international_expense = sum(valorLíquido)) %>%
-  arrange(international_expense)
+  select(nomeParlamentar,
+         sgUF,
+         sgPartido,
+         tipoDespesa,
+         fornecedor) %>%
+  filter(nomeParlamentar %in% 
+         c("CAMILO COLA",
+           "MARCIO MONTEIRO",
+           "MARCELO ALMEIDA"))
 ```
+
+* The top 3 frugal parliamentarians only expense was related to telephony. Most likely a mere formality. 
+
+<br>
+
+> Looking up the most frugal of our parliamentarians _Camilo Cola_ we can have an idea of who he is. _Camilo Cola_ is a self made businessman and founder of a whole bussiness empire called _Grupo Itapemirim_. Originally very poor, when he was 18 years old _Camilo_ left to fight World War II. When _Camilo_ first became a parliamentarian he was over 80 years old. _Camilo Cola_ seems the type of man that would pay for pretty much all of his expenses as parliamentarian.
 
 <br>
 
@@ -143,6 +187,14 @@ data %>%
 ## Parliamentarians from which states spent the most abroad? And the less?  
 
 <br>
+
+```{r}
+data %>%
+  filter(tipoDocumento == 2) %>%
+  group_by(sgUF) %>%
+  summarise(international_expense = sum(valorLíquido)) %>%
+  arrange(international_expense)
+```
 
 ```{r}
 data %>%

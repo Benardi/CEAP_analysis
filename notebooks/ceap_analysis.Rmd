@@ -102,8 +102,8 @@ data %>%
 * The parliamentarian _Edio Lopes_ from the state of Roraima is the biggest spender with a total expense of $R\$\:1,\!485,\!000.\,00$ (that's almost **1.5 million reais**).
     + _Edio Lopes_ spent what the second place _Hiran Gonçalves_ (also from Roraima) spent plus some $R\$\:55,\!000.\,00$.
     + _Edio Lopes_ spent what the tenth place _Silas Câmara_ from the state of Amazonas spent plus some $R\$\: 80,\!000.\,00$.
-* All 10 parliamentarians spent well over *1 million reais*, furthermore none of the states involved are usually pointed as one of the richest brazilian states. 
-    + Among the states that made to the rank Amazonas would be the most proeminent and yet its parliamentarian is right at the bottom of the top 10 rank. 
+* All 10 parliamentarians spent well over *1 million reais*, furthermore none of the states involved are usually pointed as one of the richest Brazilian states. 
+    + Among the states that made to the rank Amazonas would be the most prominent and yet its parliamentarian is right at the bottom of the top 10 rank. 
 * Half of the big spenders are from the state of Roraima (top three included).
 
 ```{r}
@@ -115,7 +115,7 @@ state_info %>%
   labs(y="Montly allowance", x="State")
 ```
 
-* The state of Roraima (RR) has the biggest montly allowance in the whole country which is approximately $R\$\:45,\!500.\,00$.  It makes sense that their parlamentarians are amongst the biggest spenders in the whole country.
+* The state of Roraima (RR) has the biggest monthly allowance in the whole country which is approximately $R\$\:45,\!500.\,00$.  It makes sense that their parliamentarians are among the biggest spenders in the whole country.
 
 * The federal district (DF), where's the capital, has the smallest allowance which is a little more than $R\$\:30,\!500.\,00$. A parliamentarian who lives there doesn't have to travel to the DF and probably already has a house there, so this is to be expected.
 
@@ -269,7 +269,7 @@ expense_month_year %>%
   sample_n(5)
 ```
 
-* We now have the montly expense of the parliamentarians that violated their respective montly allowance.
+* We now have the monthly expense of the parliamentarians that violated their respective monthly allowance.
 
 ```{r}
 expense_month_year %>%
@@ -318,7 +318,7 @@ data %>%
 
 * We have **São Paulo - SP**, **Amazonas - AM**, **Rio de Janeiro - RJ**, **Minas Gerais - MG** and **Roraima - RR**.
     + **São Paulo - SP**, **Amazonas - AM**, **Rio de Janeiro - RJ** and **Minas Gerais - MG** count among the richest states in the country and Amazonas is very far away from the capital in the **Federal District - DF**.
-    + As seen before **Roraima - RR** has the biggest montly allowance in the whole country.
+    + As seen before **Roraima - RR** has the biggest monthly allowance in the whole country.
 
 <br>
 

@@ -298,6 +298,8 @@ expense_month_year %>%
 * At the top of the rank we have Pastor Eurico who managed to spend over R$ 180,000 more than he should in a single month. 
 * All of our ranked parliamentarians somehow had to spend way over R$ 100,000 than they should have in the period of a single month.
 
+<br>
+
 ## At which states the parliamentarians spent the most with airfare ? And the less? 
 
 ```{r}
@@ -351,6 +353,12 @@ data %>%
   labs(x="Parties", y="Absolute frequency")
 ```
 
+* The parties **PMDB** (Brazilian Democratic Movement | centre to centre-right), **PP** (Progressistas | right-wing) and **SD** (Solidariedade | centre-left) are by far the ones that used CEAP the most times.
+
+* The parties **PSC** (Social Christian Party | centre-right) and **PROS** (Republican Party of the Social Order | centre-right) are by far the ones that have used CEAP the least times.
+
+<br>
+
 ## In which parties the parliamentarians spent the most from CEAP? In which they spent the less?
 
 ```{r}
@@ -367,6 +375,12 @@ data %>%
   labs(x="Parties", y="Total expense")
 ```
 
+* **PMDB** (Brazilian Democratic Movement | centre to centre-right) is by far the party that spent the most in Paraíba.
+    +  Second place **PSD** (Social Democratic Party | centre) and third place and **DEM** (Democrats | 	centre-right to right) total expenses are far below the biggest spender.
+
+* The parties **PSC** (Social Christian Party | centre-right) and **PROS** (Republican Party of the Social Order | centre-right) both spent very little compared to the rest and are clearly the parties that spent less in Paraíba.
+    + The third party to spend less **PT** (Workers' Party | centre-left to left-wing) has a total expense considerably bigger than that of the two most frugal parties.
+
 <br>
 
 ***
@@ -376,7 +390,7 @@ data %>%
 
 # Looking at expense by political party
 
-## What type of expense is more frequently paid with CEAP by parliamentarians of these parties? 
+## What type of expense is more frequently paid for with CEAP by parliamentarians of these parties? 
 
 ### PSDB
 
@@ -388,9 +402,13 @@ data %>%
   ggplot(aes(reorder(tipoDespesa,frequency),
              frequency)) +
   geom_bar(stat="identity",
-           fill="#1E347F") + 
-  coord_flip()
+           fill="#1E347F") +
+  labs(y= "Absolute Frequency", 
+       x="Type of expense") +
+  coord_flip() 
 ```
+
+* Airfare (Emissão de Bilhete Aéreo) is the type of expense most frequently paid for with CEAP by parliamentarians from PSDB. Next follows 'fuel and lubricants' (Combustíveis e Lubrificantes) and 'telephony' (Telefonia).
 
 ### PMDB
 
@@ -408,6 +426,8 @@ data %>%
   coord_flip()
 ```
 
+* 'Airfare' (Emissão de Bilhete Aéreo) is the type of expense most frequently paid for with CEAP by parliamentarians from PMDB. Next follows 'fuel and lubricants' (Combustíveis e Lubrificantes) and 'telephony' (Telefonia).
+
 ### PT
 
 ```{r}
@@ -424,7 +444,17 @@ data %>%
   coord_flip()
 ```
 
+* 'Airfare' (Emissão de Bilhete Aéreo) is the type of expense most frequently paid for with CEAP by parliamentarians from PT. Next follows 'fuel and lubricants' (Combustíveis e Lubrificantes) and 'taxi, toll and parking' (Serviço de Táxi, Pedágio e Estacionamento).
 
+<br>
+
+### Summary
+
+<br>
+
+> Across all three parties _the expense most frequently paid for with CEAP_ is **airfare**, followed by **(fuel and lubricants)**. The third place is **telephony** for PSDB and PMDB and **(taxi, toll and parking)** for PT. 
+
+<br>
 
 ## What type of expense paid with CEAP by parliamentarians of these parties costs more?
 
@@ -444,6 +474,9 @@ data %>%
   coord_flip() 
 ```
 
+* The costlier expense for PSDB is 'airfare' (Emissão de Bilhete Aéreo) followed by divulgation of parliamentary activity' (Divulgação da Atividade Parlamentar) and 'office maintenance and support to parliamentary activity' (Manutenção de Escritório de Apoio à Atividade Parlamentar).
+
+
 ### PMDB
 
 ```{r}
@@ -460,8 +493,9 @@ data %>%
   coord_flip() 
 ```
 
-### PT
+* The costlier expense for PMDB is divulgation of parliamentary activity' (Divulgação da Atividade Parlamentar)followed by 'airfare' (Emissão de Bilhete Aéreo) and 'renting or freighting of automotive vehicles' (Locação ou Fretamento de Veículos Automotores).
 
+### PT
 
 ```{r}
 data %>%
@@ -476,3 +510,9 @@ data %>%
        x="Type of expense") +
   coord_flip() 
 ```
+
+* The costlier expense for PT is 'airfare' (Emissão de Bilhete Aéreo) followed by 'divulgation of parliamentary activity' (Divulgação da Atividade Parlamentar) and 'office maintenance and support to parliamentary activity' (Manutenção de Escritório de Apoio à Atividade Parlamentar).
+
+### Summary
+
+> PT and PSDB have the same three costlier expenses **(airfare, divulgation and office maintenance)**. Unlike the other for PMDB **divulgation** is costlier than **airfare** and **vehicle renting/freighting** takes the spot from **office maintenance'**.  

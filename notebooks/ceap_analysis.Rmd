@@ -4,11 +4,11 @@ subtitle: "Exploratory data analysis on 'Quota for the exercise of parliamentary
 author: "José Benardi de Souza Nunes"
 date: 30/08/2018
 output:
-  html_notebook:
-    toc: yes
-    toc_float: yes
   html_document:
     df_print: paged
+    toc: yes
+    toc_float: yes
+  html_notebook:
     toc: yes
     toc_float: yes
 ---
@@ -23,10 +23,16 @@ output:
 
 <br>
 
+***
+
+<br>
+
+# Data Overview 
+
 ```{r setup, echo=FALSE, warning=FALSE, message=FALSE}
+library(here)
 library(tidyverse)
 library(lubridate)
-library(here)
 theme_set(theme_bw())
 ```
 
@@ -406,12 +412,12 @@ data %>%
 
 ```{r}
 data %>%
-  filter(sgUF == "PB") %>%
+  filter(sgUF == "PB") %>% # keep only PB
   na.omit(sgUF,
           sgPartido,
           valorLíquido) %>%
   group_by(sgPartido) %>%
-  summarize(total_expense = sum(valorLíquido)) %>%
+  summarize(total_expense = sum(valorLíquido)) %>% # calc total expense
   ggplot(aes(reorder(sgPartido,total_expense),
              total_expense)) +
   geom_bar(stat = "identity") +
@@ -439,9 +445,9 @@ data %>%
 
 ```{r}
 data %>%
-  filter(sgPartido %in% c("PSDB")) %>%
+  filter(sgPartido %in% c("PSDB")) %>% # keep only PSDB
   group_by(tipoDespesa) %>%
-  summarize(frequency = n()) %>%
+  summarize(frequency = n()) %>% # calc total times
   ggplot(aes(reorder(tipoDespesa,frequency),
              frequency)) +
   geom_bar(stat="identity",
@@ -457,9 +463,9 @@ data %>%
 
 ```{r}
 data %>%
-  filter(sgPartido %in% c("PMDB")) %>%
+  filter(sgPartido %in% c("PMDB")) %>% # keep only PMDB
   group_by(tipoDespesa) %>%
-  summarize(frequency = n()) %>%
+  summarize(frequency = n()) %>% # calc total times
   ggplot(aes(reorder(tipoDespesa,frequency),
              frequency)) +
   geom_bar(stat="identity",
@@ -475,9 +481,9 @@ data %>%
 
 ```{r}
 data %>%
-  filter(sgPartido %in% c("PT")) %>%
+  filter(sgPartido %in% c("PT")) %>% # keep only PT
   group_by(tipoDespesa) %>%
-  summarize(frequency = n()) %>%
+  summarize(frequency = n()) %>% # calc total times
   ggplot(aes(reorder(tipoDespesa,frequency),
              frequency)) +
   geom_bar(stat="identity",
@@ -505,9 +511,9 @@ data %>%
 
 ```{r}
 data %>%
-  filter(sgPartido %in% c("PSDB")) %>%
+  filter(sgPartido %in% c("PSDB")) %>% # keep only PSDB
   group_by(tipoDespesa) %>%
-  summarize(expense = sum(valorLíquido)) %>%
+  summarize(expense = sum(valorLíquido)) %>% # calc total expense
   ggplot(aes(reorder(tipoDespesa,expense),
              expense)) +
   geom_bar(stat="identity",
@@ -524,9 +530,9 @@ data %>%
 
 ```{r}
 data %>%
-  filter(sgPartido %in% c("PMDB")) %>%
+  filter(sgPartido %in% c("PMDB")) %>% # keep only PMDB
   group_by(tipoDespesa) %>%
-  summarize(expense = sum(valorLíquido)) %>%
+  summarize(expense = sum(valorLíquido)) %>% # calc total expense
   ggplot(aes(reorder(tipoDespesa,expense),
              expense)) +
   geom_bar(stat="identity",
@@ -542,9 +548,9 @@ data %>%
 
 ```{r}
 data %>%
-  filter(sgPartido %in% c("PT")) %>%
+  filter(sgPartido %in% c("PT")) %>% # keep only PT
   group_by(tipoDespesa) %>%
-  summarize(expense = sum(valorLíquido)) %>%
+  summarize(expense = sum(valorLíquido)) %>% # calc total expense
   ggplot(aes(reorder(tipoDespesa,expense),
              expense)) +
   geom_bar(stat="identity",

@@ -52,11 +52,14 @@ data <- read_csv(here::here("data/dadosCEAP.csv"),
                    dataEmissao = col_character(),
                    valorDocumento = col_double(),
                    valorGlosa = col_integer(),
-                   valorLíquido = col_double())) %>%
+                   valorLíquido = col_double())) 
+
+data %>% 
   mutate(dataEmissao = parse_date_time(dataEmissao,"%Y-%m-%d %H:%M:%S"),
-         year_month = paste(lubridate::year(dataEmissao),
-                            lubridate::month(dataEmissao),sep = "-"),
-         tipoDespesa = toupper(tipoDespesa))
+         year_month = paste(lubridate::year(dataEmissao),   # extract year
+                            lubridate::month(dataEmissao),  # extract month
+                            sep = "-"),
+         tipoDespesa = toupper(tipoDespesa)) -> data
 
 state_info <- read_csv(here::here("/data/limiteMensalCEAP.csv"),
                        progress = F,
@@ -82,7 +85,9 @@ read_tsv(here::here("data/trsl_expenses.tsv"),
 trsltd_expenses
 ```
 
-* A translation for the description of each one of the 18 types of expense was recorded with its original term.
+* A translation for the description of each one of the 18 types of expense was recorded alongside its original term.
+
+<br>
 
 ```{r}
 data %>% 
@@ -102,11 +107,54 @@ data %>%
 
 <br>
 
+```{r}
+data %>%
+  na.omit(year_month) %>% 
+  group_by(year_month) %>%     # times used
+  summarize(total = n()) %>%   # by year/month
+  ggplot(aes(year_month, total)) +
+  geom_point() +
+  theme(axis.text.x = element_text(angle = 60,
+                                   hjust = 1)) +
+  labs(x="Year and month", y="Absolute Frequency")
+```
+
+* The period of time covered by the dataset is of about 3 years which amounts to the duration of our parliamentarian's office minus the 120 days prior to the election.
+
+```{r}
+data %>%
+  group_by(idCadastro,
+           nomeParlamentar) %>%
+  slice(1) %>% # keep one entry for parliamentarian
+  ungroup() %>%
+  group_by(sgPartido) %>%              # calc parliamentarian  
+  summarize(num_parliament = n()) %>%  # by party
+  na.omit() %>%
+  ggplot(aes(reorder(sgPartido,
+                     num_parliament),
+             num_parliament)) +
+  geom_bar(stat="identity") + 
+  labs(x="Political parties",
+       y="Number of parliamentarians") +
+  theme(axis.text.x = element_text(angle = 60,
+                                   hjust = 1))
+```
+
+* We can see that **PMDB** detains the majority of offices followed closely by **PT** and that **PSDB** is still a major player. This was to be expected as the aforementioned parties are often regarded as the most proeminent ones in the Brazilian political scene.  
+
+<br>
+
 ***
 
 <br>
 
 # Overall spending of the CEAP budget
+
+<br>
+
+##### In this section we'll look at both the **biggest spenders** and **most frugal** parliamentarians. 
+
+#####We'll examine each group in ranks of 10 parliamentarians, a commonplace in terms of ranking.
 
 <br>
 
@@ -258,6 +306,12 @@ data %>%
 
 <br>
 
+##### In this section we'll look at the parliamentary expenses paid for with the CEAP budget from the point of view of the states these parliamentarians represent. 
+
+##### When talking about the parliamentarians themselves we'll keep our ranking of 10 parliamentarians. However, when examining the states we'll adopt a **ranking of 3 states**. Talking about 10 states means talking about almost half the states, which would be cumbersome. 
+
+<br>
+
 ## Parliamentarians from which states spent the most abroad? And the less?  
 
 <br>
@@ -386,6 +440,12 @@ data %>%
 
 <br>
 
+##### In this section we'll pay closer attention to the state of Paraíba. We'll examine which political parties are the most avid and the most restrained spenders in terms of frequency and overall cost.
+
+##### We'll put the political parties in **rankings of 3**, a number we consider reasonable as our examination covers a total of 12 political parties.
+
+<br>
+
 ## In which parties the parliamentarians used CEAP more frequently? In which did they use it less frequently?
 
 ```{r}
@@ -402,6 +462,7 @@ data %>%
 ```
 
 * The parties **PMDB** (Brazilian Democratic Movement | centre to centre-right), **PP** (Progressistas | right-wing) and **SD** (Solidariedade | centre-left) are by far the ones that used CEAP the most times.
+    +  In the case of **PMDB** it was to be expected as it detains the majority of offices.
 
 * The parties **PSC** (Social Christian Party | centre-right) and **PROS** (Republican Party of the Social Order | centre-right) are by far the ones that have used CEAP the least times.
     + The third party to have used CEAP the least times **PT** (Workers' Party | centre-left to left-wing) still used CEAP many times more than **PSC** and **PROS**.
@@ -424,9 +485,9 @@ data %>%
   labs(x="Parties", y="Total expense")
 ```
 
-* **PMDB** (Brazilian Democratic Movement | centre to centre-right) is by far the party that spent the most in Paraíba.
+* **PMDB** (Brazilian Democratic Movement | centre to centre-right) is by far the party that spent the most in Paraíba, which was to be expected as **PMDB** detains the majority of offices.
     +  Second place **PSD** (Social Democratic Party | centre) and third place and **DEM** (Democrats | 	centre-right to right) total expenses are far below the biggest spender.     
-<br>
+
 * The parties **PSC** (Social Christian Party | centre-right) and **PROS** (Republican Party of the Social Order | centre-right) both spent very little compared to the rest and are clearly the parties that spent less in Paraíba.
     + The third party to spend less **PTB** (Brazilian Labour Party | centre-right) still has a total expense considerably bigger than that of **PSC** and **PROS**.
 
@@ -438,6 +499,12 @@ data %>%
 
 
 # Looking at spending by political party
+
+<br>
+
+##### At this section we'll look closely at the expenses of three of the major political parties in Brazil: **PT, PSDB** and **PMDB**. Candidates from **PT** and **PSDB** are often the competitors at the run-off election for presidency and **PMDB** often holds the parliamentary majority (as is the case in this dataset). These are only some of the evidences of the importance of the chosen parties in the Brazilian political scene.    
+
+<br>
 
 ## What type of expense is more frequently paid for with CEAP by parliamentarians of these parties? 
 
@@ -454,7 +521,9 @@ data %>%
            fill="#1E347F") +
   labs(y= "Absolute Frequency", 
        x="Type of expense") +
-  coord_flip() 
+  coord_flip() +
+  theme(axis.text.x = element_text(angle = 90,
+                                   hjust = 1))
 ```
 
 * **Air Tick Issuance** is the type of expense most frequently paid for with CEAP by parliamentarians from PSDB. Next follows **Fuel and Lubricants** and **Telephony**.
@@ -472,7 +541,9 @@ data %>%
            fill="#7F6607") + 
   labs(y= "Absolute Frequency", 
        x="Type of expense") +
-  coord_flip()
+  coord_flip() +
+  theme(axis.text.x = element_text(angle = 90,
+                                   hjust = 1))
 ```
 
 * **Air Tick Issuance** is the type of expense most frequently paid for with CEAP by parliamentarians from PMDB. Next follows **Fuel and Lubricants** and **Telephony**.
@@ -490,7 +561,9 @@ data %>%
            fill="#7F1707") + 
   labs(y= "Absolute Frequency", 
        x="Type of expense") +
-  coord_flip()
+  coord_flip() +
+  theme(axis.text.x = element_text(angle = 90,
+                                   hjust = 1))
 ```
 
 * **Air Tick Issuance** is the type of expense most frequently paid for with CEAP by parliamentarians from PT. Next follows **Fuel and Lubricants** and **Taxi Service, Toll and Parking**.
@@ -520,7 +593,9 @@ data %>%
            fill="#1E347F") +
   labs(y= "Total expense", 
        x="Type of expense") +
-  coord_flip() 
+  coord_flip() +
+  theme(axis.text.x = element_text(angle = 90,
+                                   hjust = 1))
 ```
 
 * The costlier expense for PSDB is **Air Tick Issuance** followed by **Divulgation of Parliamentary Activity**  and **Maintenance of Office to support Parliamentary Activity**.
@@ -539,7 +614,9 @@ data %>%
            fill="#7F6607") +
   labs(y= "Total expense", 
        x="Type of expense") +
-  coord_flip() 
+  coord_flip() +
+  theme(axis.text.x = element_text(angle = 90, 
+                                   hjust = 1))
 ```
 
 * The costlier expense for PMDB is **Divulgation of Parliamentary Activity** followed by **Air Ticket Issuance** and **Leasing or Freighting of Automotive Vehicles**.
@@ -557,7 +634,9 @@ data %>%
            fill="#7F1707") +
   labs(y= "Total expense", 
        x="Type of expense") +
-  coord_flip() 
+  coord_flip() +
+  theme(axis.text.x = element_text(angle = 90,
+                                   hjust = 1))
 ```
 
 * The costlier expense for PT is **Air Ticket Issuance** followed by **Divulgation of Parliamentary Activity**  and **Maintenance of Office to support Parliamentary Activity**.

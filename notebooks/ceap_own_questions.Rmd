@@ -1,0 +1,76 @@
+---
+title: "C.E.A.P analysis"
+author: "José Benardi de Souza Nunes"
+date: 30/08/2018
+output:
+  html_notebook:
+    toc: yes
+    toc_float: yes
+---
+
+```{r}
+library(tidyverse)
+library(lubridate)
+library(here)
+
+theme_set(theme_bw())
+```
+
+```{r}
+data <- read_csv(here::here("data/dadosCEAP.csv"),
+                 progress = F,
+                 col_types = cols(
+                   nomeParlamentar = col_character(),
+                   idCadastro = col_integer(),
+                   sgUF = col_character(),
+                   sgPartido = col_character(),
+                   tipoDespesa = col_character(),
+                   especDespesa = col_character(),
+                   fornecedor = col_character(),
+                   CNPJCPF = col_character(),
+                   tipoDocumento = col_integer(),
+                   dataEmissao = col_character(),
+                   valorDocumento = col_double(),
+                   valorGlosa = col_integer(),
+                   valorLíquido = col_double())) %>%
+  mutate(dataEmissao = parse_date_time(dataEmissao,"%Y-%m-%d %H:%M:%S"),
+         year_month = paste(lubridate::year(dataEmissao),
+                            lubridate::month(dataEmissao),sep = "-"),
+         tipoDespesa = toupper(tipoDespesa))
+
+state_info <- read_csv(here::here("/data/limiteMensalCEAP.csv"),
+                       progress = F,
+                       col_types = cols(
+                         UF = col_character(),
+                         limite_mensal = col_double()))
+
+data %>% 
+  full_join(state_info,
+            by = c("sgUF" = "UF")) -> data
+
+data %>%
+  glimpse()
+```
+
+```{r}
+data %>%
+  mutate(week_day = wday(dataEmissao),
+         is_weekend = (week_day == 1) |
+                         (week_day == 7)) -> data
+
+data %>%
+  select(dataEmissao,
+         week_day,
+         is_weekend) %>%
+  sample_n(5)
+```
+
+```{r}
+data %>%
+  group_by(is_weekend) %>%
+  summarize(total_expense = sum(valorLíquido)) %>%
+  na.omit(is_weekend) %>%
+  ggplot(aes(is_weekend,total_expense)) +
+  geom_bar(stat="identity")
+```
+

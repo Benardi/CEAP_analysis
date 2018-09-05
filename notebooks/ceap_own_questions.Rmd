@@ -67,10 +67,86 @@ data %>%
 
 ```{r}
 data %>%
-  group_by(is_weekend) %>%
-  summarize(total_expense = sum(valorLíquido)) %>%
   na.omit(is_weekend) %>%
-  ggplot(aes(is_weekend,total_expense)) +
-  geom_bar(stat="identity")
+  mutate(total = sum(valorLíquido)) %>%
+  group_by(total,
+           is_weekend) %>%
+  summarize(total_expense = sum(valorLíquido)) %>%
+  mutate(fract = total_expense/total) %>%
+  ggplot(aes(is_weekend,fract)) +
+  geom_bar(stat="identity") +
+    labs(x="Is it a weekend",
+       y="Percentage (%)")
 ```
 
+```{r}
+data %>%
+  group_by(is_weekend,sgPartido) %>%
+  summarize(total_expense = sum(valorLíquido)) %>%
+  na.omit(is_weekend) %>%
+  ggplot(aes(reorder(sgPartido,
+                     total_expense),
+             total_expense,
+             fill=is_weekend)) +
+  geom_bar(stat="identity") + 
+  labs(x="Political parties",
+       y="Total expense (R$)") +
+  theme(axis.text.x = element_text(angle = 60,
+                                   hjust = 1))
+```
+
+```{r}
+data %>%
+  filter(is_weekend) %>%
+  group_by(is_weekend,sgPartido) %>%
+  summarize(total_expense = sum(valorLíquido)) %>%
+  na.omit(is_weekend) %>%
+  ggplot(aes(reorder(sgPartido,
+                     total_expense),
+             total_expense)) +
+  geom_bar(stat="identity",
+           fill="#00BFC4") + 
+  labs(x="Political parties",
+       y="Total expense (R$)") +
+  theme(axis.text.x = element_text(angle = 60,
+                                   hjust = 1))
+```
+
+```{r}
+data %>%
+  na.omit(is_weekend,
+          sgPartido) %>%
+  group_by(sgPartido) %>%
+  mutate(total = sum(valorLíquido)) %>%
+  ungroup() %>%
+  group_by(total,
+           sgPartido,
+           is_weekend) %>%
+  summarize(total_expense = sum(valorLíquido)) %>%
+  mutate(fract = total_expense/total) %>%
+  filter(is_weekend) %>%
+  ggplot(aes(reorder(sgPartido,fract),
+             fract)) +
+  geom_bar(stat="identity") +
+    labs(x="Is it a weekend",
+       y="Percentage (%)") +
+  theme(axis.text.x = element_text(angle = 60,
+                                   hjust = 1))
+```
+
+```{r}
+data %>%
+  group_by(fornecedor) %>%
+  summarize(total_expense = sum(valorLíquido)) %>%
+  top_n(10, wt=total_expense) %>%
+  mutate(fornecedor = toupper(fornecedor)) %>%
+  ggplot(aes(reorder(fornecedor,
+                     total_expense),
+             total_expense)) +
+  geom_bar(stat="identity") + 
+  labs(x="Supplier",
+       y="Total expense (R$)") +
+  theme(axis.text.x = element_text(angle = 90,
+                                   hjust = 1)) +
+  coord_flip() 
+```

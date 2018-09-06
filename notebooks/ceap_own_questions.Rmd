@@ -27,6 +27,7 @@ output:
 ```{r setup, echo=FALSE, warning=FALSE, message=FALSE}
 library(here)
 library(scales)
+library(ggridges)
 library(tidyverse)
 library(lubridate)
 
@@ -161,7 +162,7 @@ data %>%
 
 <br>
 
-# Expenditures during the week and the weekends
+# Expenditure during the week and the weekends
 
 <br>
 
@@ -266,65 +267,50 @@ data %>%
 
 <br>
 
-# Looking at expenditures by supplier  
+# Looking at the cost of the suppliers  
+
+<br>
+
+We will examine the top 10 most expensive suppliers (in terms of median cost).
 
 ```{r}
 data %>%
-  group_by(fornecedor) %>%
-  summarize(total_expense = sum(valorLíquido)) %>%
-  top_n(10, wt=total_expense) %>%
   mutate(fornecedor = toupper(fornecedor)) %>%
-  ggplot(aes(reorder(fornecedor,
-                     total_expense),
-             total_expense)) +
-  geom_bar(stat="identity") + 
-  labs(x="Supplier",
-       y="Total expense (R$)") +
-  theme(axis.text.x = element_text(angle = 90,
-                                   hjust = 1)) +
-  coord_flip() 
-```
-
-```{r}
-data %>%
-  group_by(fornecedor, sgPartido) %>%
-  summarize(total_expense = sum(valorLíquido)) %>%
+  group_by(fornecedor, sgPartido) %>%              # calc expense of each
+  summarize(total_expense = sum(valorLíquido)) %>% # supplier for each party
   ungroup() %>%
-  group_by(fornecedor) %>%
-  mutate(median_expense = median(total_expense)) %>%
+  group_by(fornecedor) %>%                           # calc median expense of
+  mutate(median_expense = median(total_expense)) %>% # each supplier (all parties)
   ungroup() -> supplier_data
 
 supplier_data %>%
+  select(fornecedor,
+         median_expense,
+         sgPartido,
+         total_expense) %>%
   sample_n(5)
 ```
 
+* Now that we  have the median cost of each supplier we can examine the overall behavior of the top 10 most expensive suppliers.
+
+<br>
 
 ```{r}
 supplier_data %>%
   select(median_expense) %>%
   unique() %>%
   arrange(desc(median_expense)) %>%
-  slice(10) -> tenth_supplier # 10th biggest median expense
+  slice(10) -> tenth_supplier # 10th biggest median cost
 
 supplier_data %>%
-  mutate(fornecedor = toupper(fornecedor)) %>%
   group_by(fornecedor, sgPartido) %>%
   filter(median_expense >= tenth_supplier) %>% # filter top 10 suppliers
   ggplot(aes(reorder(fornecedor,
                      median_expense),
              total_expense)) +
-  geom_boxplot() +
+  geom_boxplot(color="#FF5900") +
+  labs(x="Supplier",
+       y="Cost (R$)") +
   coord_flip()
 ```
-
-
-
-```{r}
-supplier_data %>%
-  select(median_expense) %>%
-  unique() %>%
-  arrange(desc(median_expense)) %>%
-  slice(1:10)
-```
-
 

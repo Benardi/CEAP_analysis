@@ -8,10 +8,27 @@ output:
     toc_float: yes
 ---
 
+<br>
+
+# Introduction 
+
+<br>
+
+> This exploratory data analysis was made based on data provided by the Brazilian government  about the expenses allowed to its parliamentarians or C.E.A.P. (Cota para o Exercício da Atividade Parlamentar / Quota for the Exercise of Parliamentary Activity). More information about it (in Portuguese) can be found in its [official site](http://www2.camara.leg.br/transparencia/acesso-a-informacao/copy_of_perguntas-frequentes/cota-para-o-exercicio-da-atividade-parlamentar)
+
+<br>
+
+***
+
+<br>
+
+# Data Overview 
+
 ```{r setup, echo=FALSE, warning=FALSE, message=FALSE}
+library(here)
+library(scales)
 library(tidyverse)
 library(lubridate)
-library(here)
 
 theme_set(theme_bw())
 ```
@@ -32,11 +49,14 @@ data <- read_csv(here::here("data/dadosCEAP.csv"),
                    dataEmissao = col_character(),
                    valorDocumento = col_double(),
                    valorGlosa = col_integer(),
-                   valorLíquido = col_double())) %>%
+                   valorLíquido = col_double())) 
+
+data %>% 
   mutate(dataEmissao = parse_date_time(dataEmissao,"%Y-%m-%d %H:%M:%S"),
-         year_month = paste(lubridate::year(dataEmissao),
-                            lubridate::month(dataEmissao),sep = "-"),
-         tipoDespesa = toupper(tipoDespesa))
+         year_month = paste(lubridate::year(dataEmissao),   # extract year
+                            lubridate::month(dataEmissao),  # extract month
+                            sep = "-"),
+         tipoDespesa = toupper(tipoDespesa)) -> data
 
 state_info <- read_csv(here::here("/data/limiteMensalCEAP.csv"),
                        progress = F,
@@ -52,6 +72,38 @@ data %>%
   glimpse()
 ```
 
+<br>
+
+```{r}
+read_tsv(here::here("data/trsl_expenses.tsv"),
+         progress = F,
+         col_types = cols(
+           original_term = col_character(),
+           translation = col_character())) -> trsltd_expenses
+
+trsltd_expenses
+```
+
+* A translation for the description of each one of the 18 types of expense was recorded alongside its original term.
+
+<br>
+
+```{r}
+data %>% 
+  full_join(trsltd_expenses,
+            by = c("tipoDespesa" = "original_term"))  %>% 
+  mutate(tipoDespesa = translation) %>%  # translate col tipoDespesa 
+  select(-translation)-> data # drop unused column
+
+data %>%
+  sample_n(5) %>%
+  select(nomeParlamentar,
+         tipoDespesa,
+         dataEmissao)
+```
+
+* We now have each term in the column tipoDespesa translated.
+
 ```{r}
 data %>%
   mutate(week_day = wday(dataEmissao),
@@ -64,6 +116,54 @@ data %>%
          is_weekend) %>%
   sample_n(5)
 ```
+
+
+<br>
+
+```{r}
+data %>%
+  na.omit(year_month) %>% 
+  group_by(year_month) %>%     # times used
+  summarize(total = n()) %>%   # by year/month
+  ggplot(aes(year_month, total)) +
+  geom_point() +
+  theme(axis.text.x = element_text(angle = 60,
+                                   hjust = 1)) +
+  labs(x="Year and month", y="Absolute Frequency")
+```
+
+* The period of time covered by the dataset is of about 3 years which amounts to the duration of our parliamentarian's office minus the 120 days prior to the election.
+
+```{r}
+data %>%
+  group_by(idCadastro,
+           nomeParlamentar) %>%
+  slice(1) %>% # keep one entry for parliamentarian
+  ungroup() %>%
+  group_by(sgPartido) %>%              # calc parliamentarian  
+  summarize(num_parliament = n()) %>%  # by party
+  na.omit() %>%
+  ggplot(aes(reorder(sgPartido,
+                     num_parliament),
+             num_parliament)) +
+  geom_bar(stat="identity") + 
+  labs(x="Political parties",
+       y="Number of parliamentarians") +
+  theme(axis.text.x = element_text(angle = 60,
+                                   hjust = 1))
+```
+
+* We can see that **PMDB** detains the majority of offices followed closely by **PT** and that **PSDB** is still a major player. This was to be expected as the aforementioned parties are often regarded as the most proeminent ones in the Brazilian political scene.  
+
+<br>
+
+***
+
+<br>
+
+# Expenditures during the week and the weekends
+
+<br>
 
 ```{r}
 data %>%
@@ -79,6 +179,9 @@ data %>%
        y="Percentage (%)")
 ```
 
+* Overall we can see a clear predominace of expenditures during the week over those during the weekend.
+    + It was to be expected, as CEAP is meant to be used to pay for work related expenses.   
+
 ```{r}
 data %>%
   group_by(is_weekend,sgPartido) %>%
@@ -90,10 +193,18 @@ data %>%
              fill=is_weekend)) +
   geom_bar(stat="identity") + 
   labs(x="Political parties",
-       y="Total expenses (R$)") +
+       y="Total expenditure (R$)") +
   theme(axis.text.x = element_text(angle = 60,
                                    hjust = 1))
 ```
+
+* Across diferent political parties the strong predominance of expenditures during the week holds.
+    + PMDB is the biggest spender.
+* **PMDB**, **PT** and **PSDB** are the parties with the highest number of offices, therefore it's reasonable that they are the ones to spend the most. 
+    
+<br>
+
+## Which parties spent the most during the weekend?
 
 ```{r}
 data %>%
@@ -107,10 +218,18 @@ data %>%
   geom_bar(stat="identity",
            fill="#00BFC4") + 
   labs(x="Political parties",
-       y="Total expense (R$)") +
+       y="Total expense (R$)",
+       title="Expenditures during the weekend") +
   theme(axis.text.x = element_text(angle = 60,
                                    hjust = 1))
 ```
+
+* **PMDB**, **PT** and **PSDB** are also the ones to spend the highest amount of money during the weekend. 
+* Despite the fact that overall **PMDB** is the biggest spender (as seen before) **PT** spent the most during the weekend.
+
+<br>
+
+## Which parties had most of their expenditures made during the weekend? 
 
 ```{r}
 data %>%
@@ -130,11 +249,24 @@ data %>%
   geom_bar(stat="identity",
            fill="#00BFC4") +
     labs(x="Political parties",
-       y="Percentage (%)") +
+       y="Percentage (%)",
+       title="Expenditures during the weekend in R$") +
+  scale_y_continuous(labels = scales::percent) +
   theme(axis.text.x = element_text(angle = 60,
                                    hjust = 1))
 ```
 
+* Unexpectedly, we see as leader the party **PRTB** (ironically named Brazilian Labour Renewal Party) that made almost $40\%$ of its expenditures during the weekend.
+* **PT** not only spent a great amount of money during the weekend as seen before, but had a substantial fraction of its expenditures made during the weekend.
+* We can see that parties like **PV** and **PSC** which were obscured in terms of overall expense, stand out as some of the parties who spent a good part of their budget during the weekend.  
+
+<br>
+
+***
+
+<br>
+
+# Looking at expenditures by supplier  
 
 ```{r}
 data %>%
@@ -159,20 +291,40 @@ data %>%
   summarize(total_expense = sum(valorLíquido)) %>%
   ungroup() %>%
   group_by(fornecedor) %>%
-  summarize(median_expense = median(total_expense)) %>%
-  top_n(10, wt=median_expense) %>% 
+  mutate(median_expense = median(total_expense)) %>%
+  ungroup() -> supplier_data
+
+supplier_data %>%
+  sample_n(5)
+```
+
+
+```{r}
+supplier_data %>%
+  select(median_expense) %>%
+  unique() %>%
+  arrange(desc(median_expense)) %>%
+  slice(10) -> tenth_supplier # 10th biggest median expense
+
+supplier_data %>%
+  mutate(fornecedor = toupper(fornecedor)) %>%
+  group_by(fornecedor, sgPartido) %>%
+  filter(median_expense >= tenth_supplier) %>% # filter top 10 suppliers
   ggplot(aes(reorder(fornecedor,
                      median_expense),
-             median_expense)) +
-  geom_bar(stat="identity") + 
+             total_expense)) +
+  geom_boxplot() +
   coord_flip()
 ```
 
+
+
 ```{r}
-data %>%
-  group_by(fornecedor, sgPartido) %>%
-  summarize(total_expense = sum(valorLíquido)) %>%
-  ungroup() %>%
-  group_by(fornecedor) %>%
-  mutate(median_expense = median(total_expense))
+supplier_data %>%
+  select(median_expense) %>%
+  unique() %>%
+  arrange(desc(median_expense)) %>%
+  slice(1:10)
 ```
+
+

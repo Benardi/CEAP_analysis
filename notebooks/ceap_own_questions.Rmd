@@ -27,6 +27,7 @@ output:
 ```{r setup, echo=FALSE, warning=FALSE, message=FALSE}
 library(here)
 library(scales)
+library(lattice)
 library(ggridges)
 library(tidyverse)
 library(lubridate)
@@ -168,16 +169,22 @@ data %>%
 
 ```{r}
 data %>%
-  na.omit(is_weekend) %>%
-  mutate(total = sum(valorLíquido)) %>%
-  group_by(total,
-           is_weekend) %>%
-  summarize(total_expense = sum(valorLíquido)) %>%
-  mutate(fract = total_expense/total) %>%
-  ggplot(aes(is_weekend,fract)) +
-  geom_bar(stat="identity") +
-    labs(x="Is it a weekend",
-       y="Percentage (%)")
+   mutate(month = lubridate::month(dataEmissao)) %>%  # extract month
+  na.omit(week_day,month) %>% 
+  group_by(week_day,month) %>% # times used
+  summarize(total = sum(valorLíquido)) %>%  # by day of week / month 
+  tidyr::spread(key= week_day, value=total, 
+                fill = 0) %>%
+  select(-month) %>% data.matrix() -> matrix_yearly
+
+colnames(matrix_yearly) <- c("Sun","Mon","Tue","Wed","Thu","Fri","Sat")
+
+x.scale <- list(at=seq(from=1,to=12,by=1))
+
+levelplot(matrix_yearly, 
+          col.regions=heat.colors,
+          scales=list(x=x.scale),
+          xlab="month", ylab= "week day")
 ```
 
 * Overall we can see a clear predominace of expenditures during the week over those during the weekend.

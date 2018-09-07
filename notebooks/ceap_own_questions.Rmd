@@ -1,8 +1,13 @@
 ---
-title: "C.E.A.P analysis"
+title: "C.E.A.P analysis (suppliers and weekend expenses)"
+subtitle: "Exploratory data analysis on 'Quota for the exercise of parliamentary activity' provided by the Brazilian government"
 author: "José Benardi de Souza Nunes"
-date: 30/08/2018
+date: "06/09/2018"
 output:
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_float: yes
   html_notebook:
     toc: yes
     toc_float: yes
@@ -106,10 +111,12 @@ data %>%
 
 * We now have each term in the column tipoDespesa translated.
 
+<br>
+
 ```{r}
 data %>%
-  mutate(week_day = wday(dataEmissao),
-         is_weekend = (week_day == 1) |
+  mutate(week_day = wday(dataEmissao), # extract week day
+         is_weekend = (week_day == 1) |  # deduce whether it's a weekend
                          (week_day == 7)) -> data
 
 data %>%
@@ -119,6 +126,7 @@ data %>%
   sample_n(5)
 ```
 
+* Once we extracted which day of the week the emission was made we simply deduced whether it was a weekend or not.
 
 <br>
 
@@ -135,6 +143,8 @@ data %>%
 ```
 
 * The period of time covered by the dataset is of about 3 years which amounts to the duration of our parliamentarian's office minus the 120 days prior to the election.
+
+<br>
 
 ```{r}
 data %>%
@@ -155,7 +165,7 @@ data %>%
                                    hjust = 1))
 ```
 
-* We can see that **PMDB** detains the majority of offices followed closely by **PT** and that **PSDB** is still a major player. This was to be expected as the aforementioned parties are often regarded as the most proeminent ones in the Brazilian political scene.  
+* We can see that **PMDB** detains the majority of offices followed closely by **PT** and that **PSDB** is still a major player. This was to be expected as the aforementioned parties are often regarded as the most prominent ones in the Brazilian political scene.  
 
 <br>
 
@@ -184,29 +194,49 @@ x.scale <- list(at=seq(from=1,to=12,by=1))
 levelplot(matrix_yearly, 
           col.regions=heat.colors,
           scales=list(x=x.scale),
-          xlab="month", ylab= "week day")
+          main="Total expenditure across days of the week",
+          xlab="month of the year", ylab= "week day")
 ```
 
-* Overall we can see a clear predominace of expenditures during the week over those during the weekend.
+* Overall we can see a clear predominance of expenditures during the week as both **saturday** and **sunday** have a smaller  total expenditure across the whole year.
     + It was to be expected, as CEAP is meant to be used to pay for work related expenses.   
+
+<br>
 
 ```{r}
 data %>%
   group_by(is_weekend,sgPartido) %>%
-  summarize(total_expense = sum(valorLíquido)) %>%
-  na.omit(is_weekend) %>%
-  ggplot(aes(reorder(sgPartido,
-                     total_expense),
-             total_expense,
-             fill=is_weekend)) +
-  geom_bar(stat="identity") + 
-  labs(x="Political parties",
-       y="Total expenditure (R$)") +
-  theme(axis.text.x = element_text(angle = 60,
-                                   hjust = 1))
+  summarize(total_cost = sum(valorLíquido)) %>%
+  na.omit(is_weekend) -> party_expense
+
+party_expense %>%
+  ungroup() %>%
+  sample_n(5)
 ```
 
-* Across diferent political parties the strong predominance of expenditures during the week holds.
+* Now we have the total cost incurred by each party during the week and during the weekend. 
+
+<br>
+
+```{r}
+ggplot(data= party_expense,
+       aes(reorder(sgPartido,
+                     total_cost),
+             total_cost,
+             fill=is_weekend)) +
+  geom_bar(data=subset(party_expense,
+                       !is_weekend),
+           stat = "identity") + 
+  geom_bar(data=subset(party_expense,
+                       is_weekend),
+           aes(y=-total_cost),
+           stat = "identity") +
+  coord_flip() +
+   labs(x="Political parties",
+        y="Total expenditure (R$)")
+```
+
+* Across different political parties the strong predominance of expenditures during the week holds.
     + PMDB is the biggest spender.
 * **PMDB**, **PT** and **PSDB** are the parties with the highest number of offices, therefore it's reasonable that they are the ones to spend the most. 
     
@@ -218,15 +248,15 @@ data %>%
 data %>%
   filter(is_weekend) %>%
   group_by(is_weekend,sgPartido) %>%
-  summarize(total_expense = sum(valorLíquido)) %>%
+  summarize(total_cost = sum(valorLíquido)) %>%
   na.omit(is_weekend) %>%
   ggplot(aes(reorder(sgPartido,
-                     total_expense),
-             total_expense)) +
+                     total_cost),
+             total_cost)) +
   geom_bar(stat="identity",
            fill="#00BFC4") + 
   labs(x="Political parties",
-       y="Total expense (R$)",
+       y="Total expenditure (R$)",
        title="Expenditures during the weekend") +
   theme(axis.text.x = element_text(angle = 60,
                                    hjust = 1))
@@ -234,6 +264,8 @@ data %>%
 
 * **PMDB**, **PT** and **PSDB** are also the ones to spend the highest amount of money during the weekend. 
 * Despite the fact that overall **PMDB** is the biggest spender (as seen before) **PT** spent the most during the weekend.
+
+> **PMDB**, **PT** and **PSDB**  spent the most during the weekend.
 
 <br>
 
@@ -244,14 +276,14 @@ data %>%
   na.omit(is_weekend,
           sgPartido) %>%
   group_by(sgPartido) %>%
-  mutate(total = sum(valorLíquido)) %>%
+  mutate(total = sum(valorLíquido)) %>% # calc total cost by party
   ungroup() %>%
   group_by(total,
            sgPartido,
-           is_weekend) %>%
-  summarize(total_expense = sum(valorLíquido)) %>%
-  mutate(fract = total_expense/total) %>%
-  filter(is_weekend) %>%
+           is_weekend) %>%                        # calc cost by weekdays
+  summarize(total_cost = sum(valorLíquido)) %>%   # and by weekends
+  mutate(fract = total_cost/total) %>%          # calc fraction
+  filter(is_weekend) %>% 
   ggplot(aes(reorder(sgPartido,fract),
              fract)) +
   geom_bar(stat="identity",
@@ -268,6 +300,8 @@ data %>%
 * **PT** not only spent a great amount of money during the weekend as seen before, but had a substantial fraction of its expenditures made during the weekend.
 * We can see that parties like **PV** and **PSC** which were obscured in terms of overall expense, stand out as some of the parties who spent a good part of their budget during the weekend.  
 
+> **PRTB** was the party to have most of its expenditures made during the weekend.
+
 <br>
 
 ***
@@ -278,27 +312,37 @@ data %>%
 
 <br>
 
-We will examine the top 10 most expensive suppliers (in terms of median cost).
+## What were the costliest suppliers (in terms of median)? What services did they offer?  
+
+<br>
+
+#####Let's separate the top 10 most expensive suppliers. They will be selected by their median cost across all parties.
 
 ```{r}
 data %>%
   mutate(fornecedor = toupper(fornecedor)) %>%
-  group_by(fornecedor, sgPartido) %>%              # calc expense of each
-  summarize(total_expense = sum(valorLíquido)) %>% # supplier for each party
+  mutate(fornecedor = ifelse(         # shorten the name       
+    fornecedor == "TODDE ADVOGADOS E CONSULTORES ASSOCIADOS", 
+    "TODDE ADVOGADOS",
+    fornecedor)) %>%
+  group_by(fornecedor,
+           sgPartido,
+           tipoDespesa) %>%              # calc expense of each
+  summarize(total_cost = sum(valorLíquido)) %>% # supplier for each party
   ungroup() %>%
   group_by(fornecedor) %>%                           # calc median expense of
-  mutate(median_expense = median(total_expense)) %>% # each supplier (all parties)
+  mutate(median_expense = median(total_cost)) %>% # each supplier (all parties)
   ungroup() -> supplier_data
 
 supplier_data %>%
   select(fornecedor,
          median_expense,
          sgPartido,
-         total_expense) %>%
+         total_cost) %>%
   sample_n(5)
 ```
 
-* Now that we  have the median cost of each supplier we can examine the overall behavior of the top 10 most expensive suppliers.
+* Now that we  have the median cost of each supplier we can examine how the top 10 most expensive suppliers relate to the parties.
 
 <br>
 
@@ -310,14 +354,39 @@ supplier_data %>%
   slice(10) -> tenth_supplier # 10th biggest median cost
 
 supplier_data %>%
-  group_by(fornecedor, sgPartido) %>%
-  filter(median_expense >= tenth_supplier) %>% # filter top 10 suppliers
+  group_by(fornecedor,
+           sgPartido,
+           tipoDespesa) %>%
+  filter(median_expense >= tenth_supplier) %>%  # filter top 10 suppliers
   ggplot(aes(reorder(fornecedor,
                      median_expense),
-             total_expense)) +
-  geom_boxplot(color="#FF5900") +
+             total_cost,
+             color=tipoDespesa)) +
+  geom_boxplot() +
   labs(x="Supplier",
-       y="Cost (R$)") +
-  coord_flip()
+       y="Cost (R$)",
+       color=NULL) +
+  coord_flip()+
+  theme(legend.position="bottom",
+        legend.direction = "vertical") +
+    theme(legend.text=element_text(size=8),
+           axis.text.y = element_text(size=8))
 ```
+
+<br>
+
+* TAM and GOL which are both air flight companies have the most diverse behavior, accounting for the lowest cost in the top 10 but majoritarily being _the costliest suppliers of all_.
+    + In terms of median the air flight companies **TAM** and **GOL** take first and second place as costliest suppliers of all with $\color{red}{\text{Air Ticket Issuance}}$
+
+<br>
+
+* The rest of the suppliers are plainly less erratic.
+    + Publicity and advertising companies  such as **STILO GRAFICA** and **GRAFICA SATELITE** take the third and fourth place with $\color{blue}{\text{Divulgation of parliamentary activity}}$.
+    + The law firm **Todde advogados e consultores associados** takes the fifth place with $\color{darkgreen}{\text{Consultancies, research and technical works}}$
+
+<br>
+
+> The costliest suppliers of all were **TAM** and **GOL** with _Air Ticket Issuance_
+
+
 
